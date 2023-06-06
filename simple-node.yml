@@ -1,0 +1,43 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: simple-node-dep
+  labels:
+    app: simple-node-dep
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: simple-node-app
+  template:
+    metadata:
+      labels:
+        app: simple-node-app
+    spec:
+      containers:
+      - name: simple-node-app
+        image: sample
+        imagePullPolicy: Never
+        ports:
+        - containerPort: 3000
+        env:
+        - name: NODE_IP
+          valueFrom: {fieldRef: {fieldPath: status.hostIP}}
+        - name: NODE_NAME
+          valueFrom: {fieldRef: {fieldPath: spec.nodeName}}
+        - name: POD_NAME
+          valueFrom: {fieldRef: {fieldPath: metadata.name}}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: simple-node-ser
+spec:
+  selector:
+    app: simple-node-app
+  type: LoadBalancer
+  ports:
+  - protocol: TCP
+    port: 5000
+    targetPort: 3000
+    nodePort: 31111
